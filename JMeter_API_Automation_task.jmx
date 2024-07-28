@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.4.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Test Plan">
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Thread Group" enabled="true">
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+      </ThreadGroup>
+      <hashTree>
+        <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+          <collectionProp name="Arguments.arguments">
+            <elementProp name="GET_URL" elementType="Argument">
+              <stringProp name="Argument.name">GET_URL</stringProp>
+              <stringProp name="Argument.value">https://jsonplaceholder.typicode.com/todos?_limit=5</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="GET_RESPONSE_FILE_NAME" elementType="Argument">
+              <stringProp name="Argument.name">GET_RESPONSE_FILE_NAME</stringProp>
+              <stringProp name="Argument.value">GET_Response.json</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="POST_URL" elementType="Argument">
+              <stringProp name="Argument.name">POST_URL</stringProp>
+              <stringProp name="Argument.value">https://jsonplaceholder.typicode.com/todos</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="MODIFIED_RESPONSE_FILE_NAME" elementType="Argument">
+              <stringProp name="Argument.name">MODIFIED_RESPONSE_FILE_NAME</stringProp>
+              <stringProp name="Argument.value">POST_Response.json</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+          </collectionProp>
+        </Arguments>
+        <hashTree/>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Get TODO" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">
+def GET_URL=vars.get(&quot;GET_URL&quot;);
+def GET_RESPONSE_FILE_NAME=vars.get(&apos;GET_RESPONSE_FILE_NAME&apos;);
+
+def get = new URL(GET_URL).openConnection(); 
+def responseCode = get.getResponseCode(); 
+println(&quot;GET Response Code :: &quot; + responseCode); 
+if (responseCode.equals(200)) {
+    response = get.getInputStream().getText()
+    // Get the current path
+    def currentPath = new File(&apos;.&apos;).absolutePath
+    // Define the file name and path
+    def filePath = &quot;${currentPath}/${GET_RESPONSE_FILE_NAME}&quot;
+    // Create a new file
+    def file = new File(filePath)
+    println(&quot;Writing Response to File&quot;);
+    println(&quot;File Path :: &quot; + filePath);
+    file.withWriter(&apos;UTF-8&apos;) {
+        writer -&gt; writer.writeLine(response)
+    }
+    println(&quot;Writing Response Completed&quot;);
+} else  {
+    println(&quot;ERROR :: Could not fetch Todos&quot;);
+}
+</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">1</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Post TODO" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
+def POST_URL=vars.get(&quot;POST_URL&quot;);
+def MODIFIED_RESPONSE_FILE_NAME=vars.get(&apos;MODIFIED_RESPONSE_FILE_NAME&apos;);
+def GET_RESPONSE_FILE_NAME=vars.get(&apos;GET_RESPONSE_FILE_NAME&apos;);
+
+// json library for groovy
+def jsonSlurper = new JsonSlurper()
+	
+// Get the current path
+def currentPath = new File(&apos;.&apos;).absolutePath
+	
+// input file name and path to fetch GET Todos data saved in file
+def inputFilePath = &quot;${currentPath}/${GET_RESPONSE_FILE_NAME}&quot;
+
+// output file name and path to store manipulated GET Todos data in file
+def outputFilePath = &quot;${currentPath}/${MODIFIED_RESPONSE_FILE_NAME}&quot;
+	
+// Read the input file content
+println(&quot;Reading JSON data from : ${inputFilePath}&quot;)
+def inputFile = new File(inputFilePath)
+def getContent = inputFile.text
+	
+// Parse the JSON content
+def jsonData = jsonSlurper.parseText(getContent)
+
+// Modify value of completed for all odd &quot;userId&quot; and even &quot;id&quot;
+jsonData.each {
+    jsonObject -&gt; if (jsonObject.userId % 2 != 0 &amp;&amp; jsonObject.id % 2 == 0) {
+        jsonObject.completed = !jsonObject.completed
+    }
+}
+	
+// Convert the modified JSON data back to a JSON string
+def jsonOutput = JsonOutput.toJson(jsonData)
+	
+// Write the modified JSON data to the output file
+def outputFile = new File(outputFilePath)
+outputFile.withWriter(&apos;UTF-8&apos;) {
+    writer -&gt; writer.writeLine(jsonOutput)
+}
+	
+// Log the output file path for confirmation
+println (&quot;Modified JSON data written to: ${MODIFIED_RESPONSE_FILE_NAME}&quot;)
+	
+	
+def post = new URL(POST_URL).openConnection(); 
+post.setRequestMethod(&quot;POST&quot;)
+post.setDoOutput(true)
+post.setRequestProperty(&quot;Content-Type&quot;, &quot;application/json&quot;)
+post.getOutputStream().write(jsonOutput.getBytes(&quot;UTF-8&quot;)); 
+def responseCode = post.getResponseCode(); 
+if (responseCode.equals(201)) {
+   println(&quot;POST Response Code :: ${responseCode} &quot;)
+    SampleResult.setResponseCode(&quot;201&quot;);
+    def postResponse = post.getInputStream().getText();
+    def postMap = jsonSlurper.parseText(postResponse)
+    def jsonList = postMap.findAll {
+        key, value -&gt; key.isInteger()
+    }.collect {
+        it.value
+    }
+    def sortedList1 = jsonList.sort {
+    	  // gives the list ordered by id,userId, title, and completed.
+        a, b -&gt; a.id &lt;=&gt; b.id ?: a.userId &lt;=&gt; b.userId ?: a.title &lt;=&gt; b.title ?: a.completed &lt;=&gt; b.completed
+    }
+    def sortedList2 = jsonData.sort {
+        a, b -&gt; a.id &lt;=&gt; b.id ?: a.userId &lt;=&gt; b.userId ?: a.title &lt;=&gt; b.title ?: a.completed &lt;=&gt; b.completed
+    }
+    // == compares list size, order and each pair of element of same index
+    def matchContent = sortedList1 == sortedList2
+    if (matchContent) {
+    	   SampleResult.setResponseData(&quot;The POST Request response content matches the posted content&quot;);
+        println(&quot;The POST Request response content matches the posted content&quot;)
+    } else  {
+    	   SampleResult.setResponseData(&quot;The POST Request response content does not matches the posted content&quot;);
+        println(&quot;The POST Request response content does not matches the posted content&quot;)
+    }
+} else  {
+    SampleResult.setResponseData(&quot;Something went wrong with API.&quot;);
+    log.error(&quot;Something went wrong with API&quot;)
+}
+
+</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49587">201</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
