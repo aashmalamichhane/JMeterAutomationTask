@@ -14,7 +14,7 @@ This repository contains a JMeter test plan and Groovy scripts to perform the fo
 - Groovy version 3.0.20.
 
 ## Setup Instructions
-1. Clone this repository to your local machine.
+1. Clone this repository(https://github.com/aashmalamichhane/JMeterAutomationTask.git) to your local machine.
 
 ## Running the Test Plan
 1. Open JMeter and load the `JMeter_API_Automation_task.jmx` file.
